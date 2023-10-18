@@ -1,0 +1,94 @@
+package telran.monitoring;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.io.IOException;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cloud.stream.binder.test.*;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.support.GenericMessage;
+import org.springframework.web.client.RestTemplate;
+
+import com.icegreen.greenmail.configuration.GreenMailConfiguration;
+import com.icegreen.greenmail.junit5.GreenMailExtension;
+import com.icegreen.greenmail.util.ServerSetupTest;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import telran.monitoring.dto.EmailNotificationData;
+import telran.monitoring.dto.JumpPulse;
+
+@SpringBootTest
+@Import(TestChannelBinderConfiguration.class) // помещает интпут и аутпут дестинейшн в аппл контекст
+class JumpsNotifierTest {
+
+	static final long PATIENT_ID = 123;
+	static final String PATIENT_NAME = "Vasya";
+	static final String DOCTOR_EMAIL = "moshe@gmail.com";
+	static final String DOCTOR_NAME = "Mashe";
+
+	static final int PREV_VALUE = 70;
+	static final int CURRENT_VALUE = 70;
+
+	@RegisterExtension
+	// сервер для тестирования сообщений
+	static GreenMailExtension mailExtension = new GreenMailExtension(ServerSetupTest.SMTP)
+			.withConfiguration(GreenMailConfiguration.aConfig().withUser("pulse", "12345.com"));
+
+	ResponseEntity<EmailNotificationData> responseNormal = new ResponseEntity<>(
+			new EmailNotificationData(DOCTOR_EMAIL, DOCTOR_NAME, PATIENT_NAME), HttpStatus.OK);
+	ResponseEntity<EmailNotificationData> responseAbnormal = new ResponseEntity<>(
+			new EmailNotificationData(DOCTOR_EMAIL, DOCTOR_NAME, PATIENT_NAME), HttpStatus.NOT_FOUND);
+
+	@Autowired
+	InputDestination producer;
+	@MockBean
+	RestTemplate restTemplate;
+	@Value("${app.email.service.name}")
+	private String hospitalServiceName;
+	@Value("${app.email.service.address}")
+	private String hospitalServiceEmail;
+
+	@Test
+	void normalFlowTest() throws MessagingException, IOException {
+		when(restTemplate.exchange(anyString(), any(HttpMethod.class), any(), any(Class.class))).thenReturn(responseNormal);
+		
+		producer.send(new GenericMessage<JumpPulse>(new JumpPulse(PATIENT_ID, PREV_VALUE, CURRENT_VALUE)));
+		MimeMessage[] messages = mailExtension.getReceivedMessages();
+		assertTrue(messages.length > 0);
+		MimeMessage message = messages[0];
+		assertEquals(DOCTOR_EMAIL, message.getAllRecipients()[0].toString());
+		assertTrue(message.getSubject().contains("" + PATIENT_ID));
+		String text = message.getContent().toString();
+		assertTrue(text.contains(DOCTOR_NAME));
+	}
+
+	@Test
+	void abnormalFlowTest() throws MessagingException, IOException {
+		when(restTemplate.exchange(anyString(), any(HttpMethod.class), any(), any(Class.class))).thenThrow(new RuntimeException("doctor not found"));
+		
+		producer.send(new GenericMessage<JumpPulse>(new JumpPulse(PATIENT_ID, PREV_VALUE, CURRENT_VALUE)));
+		MimeMessage[] messages = mailExtension.getReceivedMessages();
+		assertTrue(messages.length > 0);
+		MimeMessage message = messages[0];
+		assertEquals(hospitalServiceEmail, message.getAllRecipients()[0].toString());
+		assertTrue(message.getSubject().contains("" + PATIENT_ID));
+		String text = message.getContent().toString();
+		assertTrue(text.contains(hospitalServiceName));
+	}
+
+}
+
+// 1. Ищем пациента по ID
+// 2. Ищем ID доктора у которого пациент был в последний раз (сорт по дате в обратно порядке с лимитом 1)
+// 3. На основе полученных данных EmailNotificationData 
