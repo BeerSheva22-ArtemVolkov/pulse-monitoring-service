@@ -19,8 +19,8 @@ import telran.monitoring.service.AvgReducerService;
 public class AvgValuesReducerAppl {
 
 	final AvgReducerService service;
-	final StreamBridge streamBridge;
-	@Value("${app.avg.binding.name:avg-reducer-out-0}")
+	final StreamBridge streamBridge; // для продьюсинга в месседж брокер
+	@Value("${app.avg.binding.name}")
 	String bindingName;
 
 	public static void main(String[] args) {
@@ -28,7 +28,7 @@ public class AvgValuesReducerAppl {
 	}
 
 	@Bean
-	Consumer<PulseProbe> pulseProbeConsumer() {
+	Consumer<PulseProbe> pulseProbeConsumerAvg() {
 		return this::processPulseProbe;
 	}
 

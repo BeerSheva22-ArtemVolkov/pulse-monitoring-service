@@ -2,6 +2,7 @@ package telran.monitoring;
 
 import java.util.function.Consumer;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -20,7 +21,8 @@ import telran.monitoring.service.EmailDataProvider;
 @Slf4j
 public class JumpsEmailNotifierAppl {
 
-	final JavaMailSender mailSender;
+	@Autowired
+	JavaMailSender mailSender;
 	final EmailDataProvider dataProvider;
 
 	@Value("${app.email.service.address:hospitalalert@gmail.com}")

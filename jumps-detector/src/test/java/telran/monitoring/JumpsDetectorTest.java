@@ -44,7 +44,7 @@ class JumpsDetectorTest {
 	JumpPulse jumpExpected = new JumpPulse(PATIENT_ID_JUMP, VALUE, JUMP_VALUE);
 
 	// <имя бина>-<вход/выход>-<номер темы>
-	String consumerBindingName = "pulseProbeConsumer-in-0"; // берется имя метода по умолчания pulseProbConsumer из
+	String consumerBindingName = "pulseProbeConsumerJumps-in-0"; // берется имя метода по умолчания pulseProbConsumer из
 															// JumpsDetectorAppl
 	@Value("${app.jumps.binding.name}")
 	String producerBindingName;
