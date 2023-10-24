@@ -1,5 +1,7 @@
 package telran.monitoring;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +27,7 @@ public class JumpsEmailNotifierAppl {
 	JavaMailSender mailSender;
 	final EmailDataProvider dataProvider;
 
-	@Value("${app.email.service.address:hospitalalert@gmail.com}")
+	@Value("${app.email.service.address:hospitalservice@hospital.com}")
 	private String hospitalServiceEmail;
 	@Value("${app.email.service.name:Hospital Alert Service}")
 	private String hospitalServiceName;
@@ -67,8 +69,8 @@ public class JumpsEmailNotifierAppl {
 
 	private String getText(JumpPulse jumpPulse, EmailNotificationData data) {
 		return String.format(
-				"Dear %s\n" + "Your patient (%s) has the pulse jump\n" + "previous value: %d\n" + "current value: %d\n",
-				data.doctorName(), data.patientName(), jumpPulse.prevValue(), jumpPulse.currentValue());
+				"Dear %s\n" + "Your patient (%s) has the pulse jump %s\n" + "previous value: %d\n" + "current value: %d\n",
+				data.doctorName(), data.patientName(), LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYY-MM-dd HH:mm")), jumpPulse.prevValue(), jumpPulse.currentValue());
 	}
 
 }

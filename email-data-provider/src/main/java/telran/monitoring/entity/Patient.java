@@ -6,5 +6,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor
 public class Patient extends Person {
-
+	public Patient(long id, String email, String name) {
+		super(id, name, email);
+	}
 }

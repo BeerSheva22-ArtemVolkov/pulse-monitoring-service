@@ -17,7 +17,6 @@ public class AvgPopulationServiceImpl implements AvgPopulationService {
 
 	@Override
 	public void processPulseProbe(PulseProbe avgPulseProb) {
-		log.info("Received PulseProbe {} ", avgPulseProb);
 		AvgPulseDoc avgPulseDoc = AvgPulseDoc.of(avgPulseProb);
 		avgPulseRepo.save(avgPulseDoc);
 		log.debug("Added to Mongo {} ", avgPulseDoc);

@@ -8,9 +8,10 @@ import java.util.Objects;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.AllArgsConstructor;
+import telran.monitoring.api.ApiConstants;
 import telran.monitoring.dto.PulseProbe;
 
-@Document(collection = "avg-pulse-values")
+@Document(collection = ApiConstants.avgValuesCollection)
 @AllArgsConstructor
 public class AvgPulseDoc {
 

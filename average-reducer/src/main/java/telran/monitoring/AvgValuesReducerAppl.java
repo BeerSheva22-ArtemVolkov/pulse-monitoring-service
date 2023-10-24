@@ -33,6 +33,7 @@ public class AvgValuesReducerAppl {
 	}
 
 	void processPulseProbe(PulseProbe probe) {
+		log.trace("{} accepted", probe);
 		long patientId = probe.patientId();
 		Integer avgValue = service.reduce(probe);
 		if (avgValue != null) {
@@ -42,7 +43,6 @@ public class AvgValuesReducerAppl {
 		} else {
 			log.trace("for patient {} no avg value yet", patientId);
 		}
-
 	}
 
 }

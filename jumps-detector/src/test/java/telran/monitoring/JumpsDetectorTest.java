@@ -39,13 +39,13 @@ class JumpsDetectorTest {
 	PulseProbe probeNoRedis = new PulseProbe(PATIENT_ID_NO_JUMP, VALUE, 0, 0);
 	PulseProbe probeNoJump = new PulseProbe(PATIENT_ID_NO_JUMP, VALUE, 0, 0);
 	PulseProbe probeJump = new PulseProbe(PATIENT_ID_JUMP, JUMP_VALUE, 0, 0);
-	LastPulseValue noJumpValue = new LastPulseValue(PATIENT_ID_NO_JUMP, VALUE);
-	LastPulseValue jumpValue = new LastPulseValue(PATIENT_ID_JUMP, VALUE);
+	LastPulseValue noJumpValue = new LastPulseValue(PATIENT_ID_NO_JUMP, VALUE, System.currentTimeMillis());
+	LastPulseValue jumpValue = new LastPulseValue(PATIENT_ID_JUMP, VALUE, System.currentTimeMillis());
 	JumpPulse jumpExpected = new JumpPulse(PATIENT_ID_JUMP, VALUE, JUMP_VALUE);
 
 	// <имя бина>-<вход/выход>-<номер темы>
 	String consumerBindingName = "pulseProbeConsumerJumps-in-0"; // берется имя метода по умолчания pulseProbConsumer из
-															// JumpsDetectorAppl
+	// JumpsDetectorAppl
 	@Value("${app.jumps.binding.name}")
 	String producerBindingName;
 
@@ -72,7 +72,15 @@ class JumpsDetectorTest {
 		Message<byte[]> message = consumer.receive(100, producerBindingName);
 		assertNull(message);
 	}
-	
+
+	@Test
+	void noJumpByPeriodTest() throws InterruptedException {
+//		Thread.sleep(1500);
+		producer.send(new GenericMessage<PulseProbe>(probeJump), consumerBindingName);
+		Message<byte[]> message = consumer.receive(100, producerBindingName);
+		assertNull(message);
+	}
+
 	@Test
 	void jumpTest() throws Exception {
 		producer.send(new GenericMessage<PulseProbe>(probeJump), consumerBindingName);
@@ -82,5 +90,5 @@ class JumpsDetectorTest {
 		JumpPulse jumpActual = mapper.readValue(message.getPayload(), JumpPulse.class);
 		assertEquals(jumpExpected, jumpActual);
 	}
-	
+
 }
